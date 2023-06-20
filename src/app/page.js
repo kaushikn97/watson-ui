@@ -1,113 +1,143 @@
-import Image from 'next/image'
+"use client";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import Select from "react-select";
+
+const CHARACTERS = [
+  "plum",
+  "mustard",
+  "orchid",
+  "scarlett",
+  "green",
+  "peacock",
+];
+const ROOMS = [
+  "kitchen",
+  "dining",
+  "hall",
+  "conservatory",
+  "study",
+  "billiards",
+  "library",
+  "lounge",
+];
+
+const WEAPONS = ["rope", "pipe", "revolver", "dagger", "candlestick", "wrench"];
+
+const AllOptions = [
+  { value: "plum", label: "plum" },
+  { value: "mustard", label: "mustard" },
+  { value: "orchid", label: "orchid" },
+  { value: "scarlett", label: "scarlett" },
+  { value: "green", label: "green" },
+  { value: "peacock", label: "peacock" },
+  { value: "kitchen", label: "kitchen" },
+  { value: "dining", label: "dining" },
+  { value: "hall", label: "hall" },
+  { value: "conservatory", label: "conservatory" },
+  { value: "study", label: "study" },
+  { value: "billiards", label: "billiards" },
+  { value: "library", label: "library" },
+  { value: "lounge", label: "lounge" },
+  { value: "rope", label: "rope" },
+  { value: "pipe", label: "pipe" },
+  { value: "revolver", label: "revolver" },
+  { value: "dagger", label: "dagger" },
+  { value: "candlestick", label: "candlestick" },
+  { value: "wrench", label: "wrench" },
+];
 
 export default function Home() {
+  const router = useRouter();
+  const [sessionId, setSessionId] = useState("");
+  const [userName, setUserName] = useState("");
+  const [players, setPlayers] = useState([]);
+  const [playerName, setPlayerName] = useState("");
+  const [characterCards, setCharacterCards] = useState([]);
+  const [weaponCards, setWeaponCards] = useState([]);
+  const [roomCards, setRoomCards] = useState([]);
+  const handlePlayerAdd = () => {
+    setPlayers((prevList) => [...prevList, playerName]);
+    setPlayerName("");
+  };
+
+  const handleRemovePlayer = (name) => {
+    setPlayers((prevList) => prevList.filter((_name) => _name !== name));
+  };
+
+  const handleCreateSession = async () => {
+    // make api call and redirect;
+    fetch("http://localhost:8080/createSession", {
+      method: "POST",
+      body: JSON.stringify({
+        mainPlayer: userName,
+        players: [userName, ...players],
+      }),
+    })
+      .then((resp) => resp.json())
+      .then((data) => {
+        setSessionId(data.sessionId);
+        fetch("http://localhost:8080/" + data.sessionId + "/addCards", {
+          method: "POST",
+          body: JSON.stringify({
+            revealedCharacters: characterCards,
+            revealedRooms: roomCards,
+            revealedWeapons: weaponCards,
+          }),
+        })
+          .then((resp) => resp.json())
+          .then((data) => {
+            router.push(`/${data.sessionId}`);
+          });
+      });
+  };
+
+  const handleCards = (input) => {
+    setCharacterCards(() =>
+      CHARACTERS.filter((i) => input.find((element) => element.value == i))
+    );
+    setRoomCards(() =>
+      ROOMS.filter((i) => input.find((element) => element.value == i))
+    );
+    setWeaponCards(() =>
+      WEAPONS.filter((i) => input.find((element) => element.value == i))
+    );
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.js</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <main>
+      <input
+        value={sessionId}
+        onChange={(e) => setSessionId(e.target.value)}
+        placeholder="Enter session ID here"
+      />
+      <button onClick={() => router.push(`/${sessionId}`)}>Join session</button>
+      <p>--OR--</p>
+      <label>Your name</label>
+      <input
+        value={userName}
+        onChange={(e) => setUserName(e.target.value)}
+        placeholder="Enter your name here"
+      />
+      {players.map((name) => (
+        <div key={name}>
+          <p>{name}</p>
+          <button onClick={() => handleRemovePlayer(name)}>x</button>
         </div>
-      </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800 hover:dark:bg-opacity-30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore the Next.js 13 playground.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
+      ))}
+      <input
+        value={playerName}
+        onChange={(e) => setPlayerName(e.target.value)}
+        placeholder="Enter player name"
+      />
+      <button onClick={handlePlayerAdd}>Add player</button>
+      <Select
+        closeMenuOnSelect={false}
+        isMulti
+        options={AllOptions}
+        onChange={handleCards}
+      ></Select>
+      <button onClick={handleCreateSession}>Start session</button>
     </main>
-  )
+  );
 }
