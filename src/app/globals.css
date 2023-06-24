@@ -1,18 +1,3 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-body {
-	width: 100vw;
-	height: 100vh;
-	display: flex;
-	justify-content: center;
-	padding: 20px;
-	background-color: #111;
-	color: #e5dfeb;
-}
-
-.multiselect-container li:hover {
-	background: #222 !important;
-	cursor: pointer;
-}
