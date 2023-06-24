@@ -3,10 +3,13 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { CHARACTERS, WEAPONS, ROOMS } from '@/constants';
+import Multiselect from 'multiselect-react-dropdown';
 
 export default function Home() {
 	const router = useRouter();
-	const [sessionId, setSessionId] = useState('');
+	const [sessionId, setSessionId] = useState(() => {
+		return localStorage.sessionId || '';
+	});
 	const [userName, setUserName] = useState('');
 	const [players, setPlayers] = useState([]);
 	const [playerName, setPlayerName] = useState('');
@@ -35,6 +38,7 @@ export default function Home() {
 			.then((resp) => resp.json())
 			.then((data) => {
 				const sessionId = data.sessionId;
+				localStorage.sessionId = sessionId;
 				fetch(`http://localhost:8080/${sessionId}/addCards`, {
 					method: 'POST',
 					body: JSON.stringify({
@@ -50,28 +54,20 @@ export default function Home() {
 			});
 	};
 
-	const handleDropdownSelect = (input) => {
-		console.log(input);
-		setSelectedCards(input);
-		return;
-		setCharacterCards(() =>
-			CHARACTERS.filter((i) =>
-				input.find((element) => element.value == i)
-			)
-		);
-		setRoomCards(() =>
-			ROOMS.filter((i) => input.find((element) => element.value == i))
-		);
-		setWeaponCards(() =>
-			WEAPONS.filter((i) => input.find((element) => element.value == i))
-		);
-	};
-
-	const addCardToList = (e) => {
-		Array.from(e.target.options).forEach((option) =>
-			console.log(option.selected)
-		);
-		// console.log(e.target.options[0].selected);
+	const addCardToList = (type, cards) => {
+		switch (type) {
+			case 'CHARACTERS':
+				setCharacterCards(cards);
+				break;
+			case 'ROOMS':
+				setRoomCards(cards);
+				break;
+			case 'WEAPONS':
+				setWeaponCards(cards);
+				break;
+			default:
+				break;
+		}
 	};
 
 	const handlePlayerNameInput = (e) => {
@@ -79,7 +75,7 @@ export default function Home() {
 	};
 
 	return (
-		<main className="w-full max-w-xl mt-10">
+		<main className="w-full max-w-xl p-3 mt-10">
 			<div className="flex flex-col items-center gap-4">
 				<p className="text-2xl font-bold">Join current session</p>
 				<input
@@ -145,49 +141,70 @@ export default function Home() {
 				</div>
 				<div className="w-full">
 					<p>Select your cards:</p>
-					<div className="flex w-full gap-2 justify-evenly">
-						<div className="flex-1">
-							<p className="mb-2">Characters</p>
-							<select
-								className="w-full border bg-bg border-border focus:outline-none"
-								onChange={addCardToList}
-								multiple
-							>
-								{CHARACTERS.map((val) => (
-									<option value={val} key={val}>
-										{val}
-									</option>
-								))}
-							</select>
-						</div>
-						<div className="flex-1">
-							<p className="mb-2">Rooms</p>
-							<select
-								className="w-full border bg-bg border-border focus:outline-none"
-								onChange={addCardToList}
-								multiple
-							>
-								{ROOMS.map((val) => (
-									<option value={val} key={val}>
-										{val}
-									</option>
-								))}
-							</select>
-						</div>
-						<div className="flex-1">
-							<p className="mb-2">Weapons</p>
-							<select
-								className="w-full border bg-bg border-border focus:outline-none"
-								onChange={addCardToList}
-								multiple
-							>
-								{WEAPONS.map((val) => (
-									<option value={val} key={val}>
-										{val}
-									</option>
-								))}
-							</select>
-						</div>
+					<div className="flex flex-col w-full gap-2 mt-4 justify-evenly">
+						<Multiselect
+							options={CHARACTERS}
+							value={characterCards}
+							avoidHighlightFirstOption
+							placeholder="Select character cards"
+							isObject={false}
+							onSelect={(val) => addCardToList('CHARACTERS', val)}
+							onRemove={(val) => addCardToList('CHARACTERS', val)}
+							style={{
+								chips: {
+									backgroundColor: '#222',
+									border: '1px solid white',
+								},
+								optionContainer: {
+									backgroundColor: '#111',
+								},
+								option: {
+									color: 'white',
+								},
+							}}
+						/>
+						<Multiselect
+							options={WEAPONS}
+							value={weaponCards}
+							avoidHighlightFirstOption
+							placeholder="Select weapon cards"
+							isObject={false}
+							onSelect={(val) => addCardToList('WEAPONS', val)}
+							onRemove={(val) => addCardToList('WEAPONS', val)}
+							style={{
+								chips: {
+									backgroundColor: '#222',
+									border: '1px solid white',
+								},
+								optionContainer: {
+									backgroundColor: '#111',
+								},
+								option: {
+									color: 'white',
+								},
+							}}
+						/>
+						<Multiselect
+							options={ROOMS}
+							value={roomCards}
+							avoidHighlightFirstOption
+							placeholder="Select room cards"
+							isObject={false}
+							onSelect={(val) => addCardToList('ROOMS', val)}
+							onRemove={(val) => addCardToList('ROOMS', val)}
+							style={{
+								chips: {
+									backgroundColor: '#222',
+									border: '1px solid white',
+								},
+								optionContainer: {
+									backgroundColor: '#111',
+								},
+								option: {
+									color: 'white',
+								},
+							}}
+						/>
 					</div>
 				</div>
 				<button
